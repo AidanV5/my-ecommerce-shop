@@ -33,6 +33,8 @@ const Navbar = () => {
                     </button>
 
                     <Link to="/">Products</Link>
+                    <Link to="/trending" style={{ color: '#ff6b6b', fontWeight: 'bold' }}>🔥 Trending</Link>
+                    {token && <Link to="/wishlist">❤️ Wishlist</Link>}
                     {token ? (
                         <>
                             {user.role === 'admin' && (

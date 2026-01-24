@@ -25,18 +25,71 @@ const extractUser = (req, res, next) => {
 
 router.use(extractUser);
 
-// Get all products
+// Get all products with filtering
 router.get('/', (req, res) => {
-    const { category } = req.query;
-    let products;
+    const { category, minPrice, maxPrice, search, sort } = req.query;
+    let query = 'SELECT * FROM products WHERE 1=1';
+    const params = [];
 
     if (category && category !== 'All') {
-        products = db.prepare('SELECT * FROM products WHERE category = ?').all(category);
-    } else {
-        products = db.prepare('SELECT * FROM products').all();
+        query += ' AND category = ?';
+        params.push(category);
     }
 
-    res.json(products);
+    if (minPrice) {
+        query += ' AND price >= ?';
+        params.push(parseFloat(minPrice));
+    }
+
+    if (maxPrice) {
+        query += ' AND price <= ?';
+        params.push(parseFloat(maxPrice));
+    }
+
+    if (search) {
+        query += ' AND (name LIKE ? OR description LIKE ?)';
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm);
+    }
+
+    // Sorting options
+    if (sort === 'price_asc') {
+        query += ' ORDER BY price ASC';
+    } else if (sort === 'price_desc') {
+        query += ' ORDER BY price DESC';
+    } else if (sort === 'newest') {
+        query += ' ORDER BY id DESC';
+    } else {
+        query += ' ORDER BY id ASC';
+    }
+
+    try {
+        const products = db.prepare(query).all(...params);
+        res.json(products);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch products' });
+    }
+});
+
+// Get trending products (based on order count)
+router.get('/trending', (req, res) => {
+    try {
+        const trendingProducts = db.prepare(`
+            SELECT p.*, COUNT(oi.id) as order_count
+            FROM products p
+            LEFT JOIN order_items oi ON p.id = (
+                SELECT product_id FROM cart_items WHERE product_id = p.id LIMIT 1
+            )
+            GROUP BY p.id
+            ORDER BY order_count DESC
+            LIMIT 10
+        `).all();
+        res.json(trendingProducts);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch trending products' });
+    }
 });
 
 // Get product by ID

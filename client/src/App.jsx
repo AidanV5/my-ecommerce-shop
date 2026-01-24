@@ -7,6 +7,9 @@ import Register from './pages/Register';
 import Cart from './pages/Cart';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminOrders from './pages/AdminOrders';
+import Reviews from './pages/Reviews';
+import Wishlist from './pages/Wishlist';
+import Trending from './pages/Trending';
 import './index.css';
 
 function App() {
@@ -22,6 +25,9 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/orders" element={<AdminOrders />} />
+            <Route path="/product/:productId/reviews" element={<Reviews />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/trending" element={<Trending />} />
           </Routes>
         </div>
       </Router>
